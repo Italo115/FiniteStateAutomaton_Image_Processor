@@ -6,9 +6,12 @@
 import org.w3c.dom.Node;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
+import java.util.List;
+
 
 public class Main {
     //TODO LIST
@@ -40,55 +43,96 @@ public class Main {
         File file = new File(args[3]);
         ArrayList<Integer> outputNodes = outputNodesInitialisation(file);
         FiniteStateAutomaton fsm = automataGenerator(file);
-        System.out.println(fsm.getAllPermutations(0,4));
-        List<List<Integer>> inputs = fsm.getAllPermutations(0,4);
-        int pixelRatio = 0;
-        for (int i = 0;i<inputs.size();i++){
-            if (pixelRatio<inputs.get(i).size()){
-            pixelRatio = inputs.get(i).size();}
-        }
-        pixelRatio = (int)Math.pow(2,pixelRatio);
-
-
-
-
-
-
-
-
         //---------------------------------------------------------//
         /*                     Decompression                       */
         //---------------------------------------------------------//
+        imageCreator(fsm,0,outputNodes);
 
 
 
 
-
-        
 
     }
+    public static void imageCreator(FiniteStateAutomaton fsm,int input,ArrayList<Integer> outputNodes) throws IOException {
+        BufferedImage image = new BufferedImage((int)Math.pow(2,resolution(fsm,0,outputNodes)),(int)Math.pow(2,resolution(fsm,0,outputNodes)),BufferedImage.TYPE_BYTE_BINARY);
+        Graphics2D graphics = image.createGraphics();
 
-    public static int[] modulus(int input1, int input2) {
-        int row = (input1 % 4 + 4) % 4; // ensure row is between 0 and 3
-        int col = (input2 % 4 + 4) % 4; // ensure col is between 0 and 3
-        return new int[]{3 - col / 2, row / 2}; // compute row and col indexes
-    }
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0, 0, (int)Math.pow(2,resolution(fsm,0,outputNodes)),(int)Math.pow(2,resolution(fsm,0,outputNodes)));
 
-    public static int sizeOfPNG(FiniteStateAutomaton fsm,ArrayList<Integer> outputNodes) {
-        int size = Integer.MIN_VALUE;
-        for (int j : outputNodes) {
-            for (int k = 0;k<fsm.getAllPermutations(0,j).size();k++) {
-                for (int i : fsm.getAllPermutations(0, j).get(k)) {
-                    if (fsm.getAllPermutations(0,j).get(k).size()>size){
-                        size =fsm.getAllPermutations(0,j).get(k).size();
+        graphics.setColor(Color.BLACK);
+
+        for (int i:outputNodes) {
+
+
+
+            for (List<Integer> j : fsm.getAllPermutations(input, i)) {
+
+
+                int area = ((int)Math.pow(2,resolution(fsm,0,outputNodes))*(int)Math.pow(2,resolution(fsm,0,outputNodes)));
+                int x = 0;
+                int y = 0;
+
+                for (int k:j){
+
+
+                    int size = j.size();
+                    switch (k){
+                        case 0:
+                            area = area/4;
+                            x = x;
+                            y += (int)Math.ceil((double)area/2.0);
+
+
+                            break;
+                        case 1:
+                            area = area/4;
+                            x = x;
+                            y = y;
+
+                            break;
+                        case 2:
+                            area = area/4;
+                            x += (int)Math.ceil((double)area/2.0);
+                            y += (int)Math.ceil((double)area/2.0);
+
+
+                            break;
+                        case 3:
+
+                            area = area/4;
+                            x += (int)Math.ceil((double)area/2.0);
+                            y = y;
+
+                            break;
+
+
+
                     }
-
                 }
-            }
-        }
-        return size;
-    }
 
+            graphics.fillRect(x,y,(int)Math.sqrt(area),(int)Math.sqrt(area));
+            }
+
+        }
+        graphics.dispose();
+        ImageIO.write(image, "png", new File("output123.png"));
+
+
+    }
+    public static int resolution(FiniteStateAutomaton fsm,int input,ArrayList<Integer> outputNodes){
+        int n = 0;
+
+        for (int i:outputNodes) {
+            for (List<Integer> j : fsm.getAllPermutations(input,i)){
+               if (n<j.size()){
+                   n = j.size();
+               }
+            }
+
+        }
+        return n;
+    }
     public static FiniteStateAutomaton automataGenerator(File file) throws FileNotFoundException {
         Scanner scanner = new Scanner(file);
         int size = Integer.parseInt(scanner.nextLine());
